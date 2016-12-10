@@ -1,0 +1,119 @@
+apply plugin: 'groovy'
+apply plugin: 'idea'
+
+archivesBaseName="qq"
+
+javadoc {
+    options.encoding = "UTF-8"
+}
+
+version = '1.0'
+
+repositories {
+    mavenLocal()
+    maven {
+        url "http://10.3.4.240:8082/nexus/content/groups/public/"
+    }
+//    maven {
+//        url "http://10.5.6.170:8081/nexus/content/groups/public/"
+//    }
+//    mavenCentral()
+}
+
+
+sourceSets {
+    main {
+        groovy.srcDirs = ['src/main/groovy']
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
+
+    test {
+        groovy.srcDirs = []
+        java.srcDirs = []
+        resources.srcDirs = []
+    }
+
+
+    resources {
+        groovy.srcDirs = []
+        java.srcDirs = []
+        resources.srcDirs = ['src/main/resources']
+    }
+}
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.4.4'
+    compile 'junit:junit:4.12'
+    compile 'log4j:log4j:1.2.17'
+    compile 'org.jsoup:jsoup:1.7.3'
+    compile 'com.alibaba:fastjson:1.2.6'
+    compile 'org.codehaus.groovy:groovy-all:2.4.4'
+    compile 'org.mock-server:mockserver-netty:3.9.8'
+    compile 'com.bladejava:blade-kit:1.2.9-alpha'
+    compile 'com.nanohttpd:nanohttpd:2.1.0'
+    compile 'org.java-websocket:Java-WebSocket:1.3.0'
+    compile 'org.jsoup:jsoup:1.7.3'
+    compile 'com.squareup.okhttp3:okhttp:3.4.1'
+
+
+}
+
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.1'
+}
+
+
+
+tasks.withType(GroovyCompile) {
+    options.fork = true
+    options.forkOptions.jvmArgs = ["-Xms64m","-Xmx512m","-XX:StringTableSize=1000003"]
+}
+
+task releaseJar(type: Jar) {
+    //设置manifest.mf的属性
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+                'Implementation-Version': version,
+                'Main-Class': 'QQServerRunner'
+    }
+    //jar包包名
+    baseName = project.name
+    //jar包版本
+    version=this.version
+    //定义Classifier
+    classifier="JDK17"
+    //jar文件的输出路径，相对位置
+    destinationDir=new File("artifacts/")
+    //自定义jar包名称，如不自定义会为baseName+version+classifier.jar
+    archiveName="${project.name}.jar"
+
+    //from对象接受一个文件路径集合，包含要打包到jar中的文件
+    from {
+        //从工程编译输出的目录中递归包含所有文件及其路径结构
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+
+    }
+    with jar
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+
+}
+
+task run(type:JavaExec){
+    //执行类在工程中的的路径
+    main = 'mainPackage.mainClass'
+    //所需要包含的包，sourceSets.main.runtimeClasspath的值为sourceSets中设置main对象中包含的包路径
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+compileJava.dependsOn(clean)
