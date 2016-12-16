@@ -2,7 +2,7 @@ package exceptions
 
 /**
  *
- * @author: weiwei
+ * @author: Assilzm
  * create: 2016-9-21 20:52.
  * description:
  */

@@ -17,7 +17,7 @@ import java.util.regex.Matcher
 
 /**
  *
- * @author: weiwei
+ * @author: Assilzm
  * create: 2016-11-23 19:39.
  * description:
  */
@@ -237,7 +237,7 @@ class MessageHandle {
                     case "wiki地址":
                         returnMessage = "http://open.seeyon.com:4567/Home"
                         break
-                    case "翻译":
+                    case ["翻译","fy"]:
                         returnMessage = TranslateControl.translate(value)
                         break
                     case "百科":

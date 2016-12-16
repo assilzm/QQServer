@@ -2,7 +2,7 @@ package utils
 
 /**
  * 工程工具类
- * @author WeiWei
+ * @author Assilzm
  * createTime 2014-9-11 16:41.
  */
 class ProjectUtils {

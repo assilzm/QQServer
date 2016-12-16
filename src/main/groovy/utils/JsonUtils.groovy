@@ -6,7 +6,7 @@ import exceptions.JsonParseException
 import org.apache.log4j.Logger
 /**
  *
- * @author: weiwei
+ * @author: Assilzm
  * create: 16:00.
  * description:
  */

@@ -6,7 +6,7 @@ import org.apache.log4j.PropertyConfigurator
 
 /**
  * Created with IntelliJ IDEA.
- * User: WeiWei
+ * User: Assilzm
  * Date: 12-10-25
  * Time: 下午5:35
  */

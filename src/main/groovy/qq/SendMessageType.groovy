@@ -2,7 +2,7 @@ package qq
 
 /**
  *
- * @author: weiwei
+ * @author: Assilzm
  * create: 2016-11-23 20:12.
  * description:
  */

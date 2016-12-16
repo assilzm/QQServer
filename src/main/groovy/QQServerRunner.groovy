@@ -4,7 +4,7 @@ import server.WebSocket
 
 /**
  *
- * @author: weiwei
+ * @author: Assilzm
  * create: 2016-11-23 18:10.
  * description:
  */
