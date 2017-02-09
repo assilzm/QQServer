@@ -21,9 +21,11 @@ repositories {
 }
 
 
+String src='src/main/groovy'
+
 sourceSets {
     main {
-        groovy.srcDirs = ['src/main/groovy']
+        groovy.srcDirs = [src]
         java.srcDirs = []
         resources.srcDirs = []
     }
@@ -55,6 +57,7 @@ dependencies {
     compile 'org.java-websocket:Java-WebSocket:1.3.0'
     compile 'org.jsoup:jsoup:1.7.3'
     compile 'com.squareup.okhttp3:okhttp:3.4.1'
+    compile 'com.offbytwo.jenkins:jenkins-client:0.3.7'
 
 
 }

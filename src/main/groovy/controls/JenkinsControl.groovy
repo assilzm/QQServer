@@ -1,6 +1,7 @@
 package controls
 
 import org.apache.log4j.Logger
+import qq.FromMessageType
 import qq.MessageHandle
 import server.QQServer
 import server.WebSocket
@@ -19,7 +20,7 @@ class JenkinsControl {
     final static String GROUP_STRING = "v5group"
 
 
-    static String jenkinsActions(Map<String, String> parms){
+    static String jenkinsActions(Map<String, String> parms) {
 
         Properties properties = FileUtils.getProperties(QQServer.CONFIG_FILE)
         Long groupNum = Long.parseLong(properties.get(GROUP_STRING).toString())
@@ -29,9 +30,9 @@ class JenkinsControl {
         to.each {
             if (it) {
                 logger.debug("通知[$it]")
-                WebSocket.send(MessageHandle.dealMessageGroup(groupNum,it.toLong(),message,true))
+                MessageHandle.sendMessageByWebSocket(message,groupNum, it.toLong(), FromMessageType.GROUP)
                 sendUsers.add("$it")
-            }else {
+            } else {
                 logger.debug("好友[$it]不存在，跳过。")
             }
         }
@@ -40,6 +41,4 @@ class JenkinsControl {
         else
             return null
     }
-
-
 }

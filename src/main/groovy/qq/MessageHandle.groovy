@@ -1,8 +1,10 @@
 package qq
 
 import com.alibaba.fastjson.JSON
+import controls.A8Control
 import controls.BaiduControl
 import controls.BaikeControl
+import controls.CustomReplyControl
 import controls.TranslateControl
 import controls.TulingControl
 import controls.WeatherControl
@@ -11,6 +13,7 @@ import controls.WuBiControl
 import exceptions.ArgumentsNotCorrectException
 import org.apache.log4j.Logger
 import server.QQServer
+import server.WebSocket
 import utils.LogUtils
 
 import java.util.regex.Matcher
@@ -29,6 +32,9 @@ class MessageHandle {
 
     final static Long adminQQ = 4699495
 
+    final static Long selfQQNum = 2028891800
+
+
     static String handleAll(JSON msgObject) {
         FromMessageType returnType = null
         int messageType = msgObject.get("Type")
@@ -36,9 +42,21 @@ class MessageHandle {
         Long fromQQNum = msgObject.get("QQ")
         Long fromGroupNum = msgObject.get("Group")
         Long fromDiscussNum = msgObject.get("Discuss")
-        String qqMsg=msgObject.get("Msg")
+        String qqMsg = msgObject.get("Msg")
         if (qqMsg) {
             String message = URLDecoder.decode(qqMsg, "UTF-8")
+            //允许该群
+            if (fromQQNum == adminQQ && message == "允许该群") {
+                if (fromGroupNum != null && fromGroupNum in QQServer.disableGroupNum) {
+                    QQServer.disableGroupNum -= fromGroupNum
+                }
+                if (fromDiscussNum != null && fromDiscussNum in QQServer.disableGroupNum) {
+                    QQServer.disableGroupNum -= fromDiscussNum
+                }
+            }
+            if (fromQQNum != adminQQ && (fromGroupNum in QQServer.disableGroupNum || fromDiscussNum in QQServer.disableGroupNum)) {
+                return null
+            }
             switch (messageType) {
             //私聊信息 11/来自好友 1/来自在线状态 2/来自群 3/来自讨论组
                 case 1:
@@ -114,7 +132,7 @@ class MessageHandle {
     }
 
     static String dealMessageQQByHttp(Long fromQQNum, String message) {
-        String dealMessage = checkActions(message)
+        String dealMessage = checkActions(message, null, fromQQNum, FromMessageType.FRIEND)
         return dealMessage ?
                 "{" +
                         "data:[" +
@@ -144,7 +162,7 @@ class MessageHandle {
 
 
     static String dealMessageGroupByHttp(Long fromGroupNum, Long fromQQNum, String message) {
-        String dealMessage = checkActions(message, fromGroupNum, fromQQNum)
+        String dealMessage = checkActions(message, fromGroupNum, fromQQNum, FromMessageType.GROUP)
         return dealMessage ?
                 "{data:[" +
                         "{" +
@@ -175,7 +193,7 @@ class MessageHandle {
     }
 
     static String dealMessageDiscussByHttp(Long fromDiscussNum, Long fromQQNum, String message) {
-        String dealMessage = checkActions(message, fromDiscussNum, fromQQNum)
+        String dealMessage = checkActions(message, fromDiscussNum, fromQQNum, FromMessageType.DISCUSS)
         return dealMessage ?
                 "{\"data\":[" +
                         "{" +
@@ -206,7 +224,25 @@ class MessageHandle {
 
     }
 
-    static String checkActions(String messages, Long groupOrDiscussNum = null, Long fromQQNum = null) {
+    static void sendMessageByWebSocket(String messages, Long groupOrDiscussNum = null, Long fromQQNum = null, FromMessageType fromMessageType = null) {
+        switch (fromMessageType) {
+            case FromMessageType.FRIEND:
+                WebSocket.send(dealMessageQQByWebSocket(fromQQNum, messages))
+                break
+            case FromMessageType.GROUP:
+                WebSocket.send(dealMessageGroupByWebSocket(groupOrDiscussNum, fromQQNum, messages))
+                break
+            case FromMessageType.DISCUSS:
+                WebSocket.send(dealMessageDiscussByWebSocket(groupOrDiscussNum, fromQQNum, messages))
+                break
+            default:
+                throw new Exception("不支持的来源类型")
+                break
+        }
+
+    }
+
+    static String checkActions(String messages, Long groupOrDiscussNum = null, Long fromQQNum = null, FromMessageType fromMessageType = null) {
         def m = messages =~ /^${START_CHAR}?\s*(\S+)(?:\s+([\s\S]*))?/
         def returnMessage = null
         try {
@@ -216,28 +252,15 @@ class MessageHandle {
                 if (m.group(2))
                     value = m.group(2).trim()
                 logger.debug("收到请求功能[$cmd],内容[$value]")
-                if (cmd == "允许该群" && fromQQNum == adminQQ) {
-                    if (groupOrDiscussNum != null) {
-                        if (groupOrDiscussNum in QQServer.disableGroupNum)
-                            QQServer.disableGroupNum -= groupOrDiscussNum
-                        return "该群已允许消息发送，继续接受该群请求"
-
-                    }
-                }
-                if (groupOrDiscussNum in QQServer.disableGroupNum) {
-                    return null
-                }
                 switch (cmd) {
-                    case ["运势", "笑话"]:
-                        returnMessage = TulingControl.send(messages).replaceAll(/[:;]/, "\\\\n")
-                        break
                     case "天气":
-                        returnMessage = WeatherControl.getWeather(value)
+                        if (value)
+                            returnMessage = WeatherControl.getWeather(value)
                         break
                     case "wiki地址":
                         returnMessage = "http://open.seeyon.com:4567/Home"
                         break
-                    case ["翻译","fy"]:
+                    case ["翻译", "fy"]:
                         returnMessage = TranslateControl.translate(value)
                         break
                     case "百科":
@@ -259,7 +282,31 @@ class MessageHandle {
                     case ~/什么是(.+)/:
                         returnMessage = WhatIsControl.getDescription(Matcher.lastMatcher[0][1])
                         break
+                    case "允许该群":
+                        returnMessage = "该群已允许消息发送，继续接受该群请求"
+                        break
+                    case {
+                        for (key in CustomReplyControl.properties.keySet()) {
+                            return it ==~ key
+                        }
+                    }:
+                        returnMessage = CustomReplyControl.getReply(cmd)
+                        break
+                    case "构建V5":
+                        if (fromQQNum == adminQQ) {
+                            sendMessageByWebSocket("开始构建V5", groupOrDiscussNum, fromQQNum, fromMessageType)
+                            returnMessage = A8Control.buildV5()
+                        }
+                        break
+                    case "构建测试环境":
+                        if (fromQQNum == adminQQ) {
+                            sendMessageByWebSocket("开始构建测试环境", groupOrDiscussNum, fromQQNum, fromMessageType)
+                            returnMessage = A8Control.buildTestEnvironment()
+                        }
+                        break
                     default:
+                        if (groupOrDiscussNum == null || messages.startsWith("[CQ:at,qq=$selfQQNum]"))
+                            returnMessage = TulingControl.send(messages.replaceAll(/^\[[^\[\]]*\]\s*/, ""))
                         break
                 }
             }
