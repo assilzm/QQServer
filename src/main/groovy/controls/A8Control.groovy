@@ -51,8 +51,8 @@ class A8Control {
         }
 
         while (buildByNumber.details().isBuilding()) {
-            Thread.sleep(1000)
-//            logger.debug("Waiting...")
+            Thread.sleep(10000)
+            logger.debug("Waiting...")
         }
         logger.debug("Build has finished.")
         logger.debug("Number: " + buildByNumber.getNumber())

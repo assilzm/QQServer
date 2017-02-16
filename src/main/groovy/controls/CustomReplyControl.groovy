@@ -28,6 +28,7 @@ class CustomReplyControl {
 
 
     static String getReply(String message) {
+        println properties
         return properties.get(message)
     }
 

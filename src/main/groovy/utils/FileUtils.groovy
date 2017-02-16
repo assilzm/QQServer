@@ -1,5 +1,7 @@
 package utils
 
+import java.nio.charset.Charset
+
 /**
  *
  * @author: Assilzm
@@ -12,7 +14,9 @@ class FileUtils {
     static Properties getProperties(File file) {
         Properties properties = new Properties()
         FileInputStream inputFile = new FileInputStream(file)
-        properties.load(inputFile)
+        BufferedReader bf = new BufferedReader(new InputStreamReader(inputFile))
+        properties.load(bf)
+        bf.close()
         inputFile.close()
         return properties
     }

@@ -69,7 +69,7 @@ public class QQServer extends NanoHTTPD {
                 Map<String, String> params = session.getParms()
                 logger.debug("parms:" + params)
                 String returnMessage = null
-                if (params.get("from") == "jenkinsBeiJing") {
+                if (params.get("from") == "jenkins") {
                     returnMessage = JenkinsControl.jenkinsActions(params)
                 }
                 logger.debug("发送数据[$returnMessage]")

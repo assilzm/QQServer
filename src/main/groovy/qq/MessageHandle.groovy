@@ -15,6 +15,7 @@ import org.apache.log4j.Logger
 import server.QQServer
 import server.WebSocket
 import utils.LogUtils
+import utils.TimeoutUtils
 
 import java.util.regex.Matcher
 
@@ -237,7 +238,6 @@ class MessageHandle {
                 break
             default:
                 throw new Exception("不支持的来源类型")
-                break
         }
 
     }
@@ -287,21 +287,26 @@ class MessageHandle {
                         break
                     case {
                         for (key in CustomReplyControl.properties.keySet()) {
-                            return it ==~ key
+                            if (it ==~ key)
+                                return true
                         }
                     }:
                         returnMessage = CustomReplyControl.getReply(cmd)
                         break
                     case "构建V5":
                         if (fromQQNum == adminQQ) {
-                            sendMessageByWebSocket("开始构建V5", groupOrDiscussNum, fromQQNum, fromMessageType)
-                            returnMessage = A8Control.buildV5()
+                            returnMessage = "开始构建V5"
+                            new TimeoutUtils().run {
+                                sendMessageByWebSocket(A8Control.buildV5(), groupOrDiscussNum, fromQQNum, fromMessageType)
+                            }
                         }
                         break
                     case "构建测试环境":
                         if (fromQQNum == adminQQ) {
-                            sendMessageByWebSocket("开始构建测试环境", groupOrDiscussNum, fromQQNum, fromMessageType)
-                            returnMessage = A8Control.buildTestEnvironment()
+                            returnMessage = "开始构建测试环境"
+                            new TimeoutUtils().run {
+                                sendMessageByWebSocket(A8Control.buildTestEnvironment(), groupOrDiscussNum, fromQQNum, fromMessageType)
+                            }
                         }
                         break
                     default:
