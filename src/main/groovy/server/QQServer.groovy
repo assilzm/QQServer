@@ -23,9 +23,9 @@ public class QQServer extends NanoHTTPD {
 
     final static File CONFIG_FILE = new File("config.properties")
 
-    static List<Long> allowGroupNum = []
+    static List<String> allowGroupNum = []
 
-    static List<Long> disableGroupNum = []
+    static List<String> disableGroupNum = []
 
     static Properties properties = new Properties()
 
@@ -50,20 +50,16 @@ public class QQServer extends NanoHTTPD {
     public NanoHTTPD.Response serve(NanoHTTPD.IHTTPSession session) {
         try {
             NanoHTTPD.Method method = session.getMethod()
-
+            println(method)
             String uri = session.getUri()
             if (NanoHTTPD.Method.POST.equals(session.getMethod())) {
-                Map<String, String> files = new HashMap<String, String>()
-                session.parseBody(files)
-                logger.debug(method.toString() + " '" + uri.toString() + "' ")
-                String responseText = URLDecoder.decode(session.getQueryParameterString(), "UTF-8")
-                logger.debug(responseText)
-                String returnMessage = MessageHandle.handleAll(JsonUtils.stringToJson(responseText))
-                if (returnMessage) {
-                    logger.debug("返回数据[$returnMessage]")
-                    return new NanoHTTPD.Response(returnMessage)
+//                Map<String, String> files = new HashMap<String, String>()
+//                session.parseBody(files)
+//                logger.debug(method.toString() + " '" + uri.toString() + "' ")
+//                String responseText = URLDecoder.decode(session.getQueryParameterString(), "UTF-8")
+//                logger.debug(responseText)
+//                String returnMessage = MessageHandle.handleAll(JsonUtils.stringToJson(responseText))
 
-                }
             }
             if (NanoHTTPD.Method.GET.equals(session.getMethod())) {
                 Map<String, String> params = session.getParms()
@@ -74,7 +70,7 @@ public class QQServer extends NanoHTTPD {
                 }
                 logger.debug("发送数据[$returnMessage]")
 
-                return new NanoHTTPD.Response(returnMessage)
+                return new NanoHTTPD.Response("{message:\"ok\"}")
             }
         } catch (Exception e) {
             logger.error("发送消息出错,错误信息:", e)

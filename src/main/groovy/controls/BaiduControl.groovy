@@ -10,24 +10,29 @@ import org.jsoup.Jsoup
  */
 class BaiduControl {
 
-    final static String baiduUrl = "http://www.baidu.com/s?tn=baidulocal&wd="
+    final static String baiduUrl = "http://www.baidu.com/s?wd="
 
 
     static String getBaiduResult(String keyword) {
-        String result =null
+        String result = null
         try {
             def response = Jsoup.connect(baiduUrl + URLEncoder.encode(keyword, "UTF-8")).get()
-            result=""
-            response.select("td.f").each {
-                def content = it.select(">font").get(0)
-                def a = it.select(">a").get(0)
-                content.select("a").remove()
-                content.select("font").last().remove()
+//            println response.html()
+            result = ""
+            response.select("div.result.c-container").each {
+//                println it.html()
+                def content = it.select(">div.c-abstract")
+                def a = it.select(">h3.t>a").get(0)
+//                content.select("a").remove()
+//                content.select("font").last().remove()
                 result += a.text() + "\n"
-                result += content.text().replaceAll(/- *$/, "") + "\n"
+                if (content.size() > 0) {
+                    result += content.get(0).text().replaceAll(/- *$/, "") + "\n"
+                }
                 result += a.attr("href") + "\n"
+
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace()
         }
         return result

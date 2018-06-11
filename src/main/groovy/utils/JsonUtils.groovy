@@ -18,7 +18,7 @@ class JsonUtils {
         try {
             return JSON.parse(str)
         } catch (Exception e) {
-            throw new JsonParseException("转换Json出错，错误信息：",e)
+            throw new JsonParseException("转换Json[$str]出错，错误信息：",e)
         }
     }
 

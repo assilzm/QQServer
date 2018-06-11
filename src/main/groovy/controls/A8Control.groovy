@@ -1,6 +1,7 @@
 package controls
 
 import com.offbytwo.jenkins.JenkinsServer
+import com.offbytwo.jenkins.JenkinsTriggerHelper
 import com.offbytwo.jenkins.model.Build
 import com.offbytwo.jenkins.model.BuildResult
 import com.offbytwo.jenkins.model.BuildWithDetails
@@ -27,6 +28,8 @@ class A8Control {
 
 
     final static String v5JobName = "v5-build-all"
+    final static String h5JobName = "m3-build"
+
     final static String testEnvironmentJobName = "v5-docker-build-test-enviorment"
 
 
@@ -34,26 +37,16 @@ class A8Control {
         return build(v5JobName, jenkinsBeiJing)
     }
 
+    static String buildH5() {
+        return build(h5JobName, jenkinsBeiJing)
+    }
+
     static String buildTestEnvironment() {
         return build(testEnvironmentJobName, jenkinsChengDu)
     }
 
-
     static String build(String jobName, JenkinsServer jenkinsServer) {
-        JobWithDetails job = jenkinsServer.getJob(jobName)
-        int buildNumberBefore = job.getLastBuild().getNumber()
-        job.build(true)
-        Build buildByNumber = jenkinsServer.getJob(jobName).getLastBuild()
-        while (buildNumberBefore == buildByNumber.getNumber() || job.isInQueue()) {
-            Thread.sleep(1000)
-            buildByNumber = jenkinsServer.getJob(jobName).getLastBuild()
-
-        }
-
-        while (buildByNumber.details().isBuilding()) {
-            Thread.sleep(10000)
-            logger.debug("Waiting...")
-        }
+        BuildWithDetails buildByNumber = new JenkinsTriggerHelper(jenkinsServer).triggerJobAndWaitUntilFinished(jobName)
         logger.debug("Build has finished.")
         logger.debug("Number: " + buildByNumber.getNumber())
         BuildWithDetails details = buildByNumber.details()

@@ -1,8 +1,11 @@
 package server
 
+
 import org.apache.log4j.Logger
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
+import qq.MessageHandle
+import utils.JsonUtils
 import utils.LogUtils
 
 
@@ -32,7 +35,8 @@ class WebSocket {
 
             @Override
             void onMessage(String message) {
-                System.out.println(message)
+//                System.out.println(message)
+                MessageHandle.handleAll(JsonUtils.stringToJson(message.trim()))
             }
 
 

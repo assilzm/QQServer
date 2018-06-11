@@ -6,6 +6,7 @@ import qq.MessageHandle
 import server.QQServer
 import server.WebSocket
 import utils.FileUtils
+import utils.JsonUtils
 import utils.LogUtils
 
 /**
@@ -23,22 +24,28 @@ class JenkinsControl {
     static String jenkinsActions(Map<String, String> parms) {
 
         Properties properties = FileUtils.getProperties(QQServer.CONFIG_FILE)
-        Long groupNum = Long.parseLong(properties.get(GROUP_STRING).toString())
-        List<String> to = parms.get("to")?.split(",")
-        String message = parms.get("message")
-        List<String> sendUsers = new ArrayList<>()
-        to.each {
-            if (it) {
-                logger.debug("通知[$it]")
-                MessageHandle.sendMessageByWebSocket(message,groupNum, it.toLong(), FromMessageType.GROUP)
-                sendUsers.add("$it")
+//        Long groupNum = Long.parseLong(properties.get(GROUP_STRING).toString())
+        String to = parms.get("to")
+        String groups = parms.get("group")
+        if (groups.trim().empty) {
+            logger.error("必须设置要发送的群群号!")
+            return null
+        }
+        else {
+            String message = parms.get("message")
+//        List<String> sendUsers = new ArrayList<>()
+            if (!(to.trim() in ["", ","])) {
+                logger.debug("通知[$to]")
+                MessageHandle.sendMessageByWebSocket(message, groups, to, FromMessageType.GROUP)
+//            sendUsers.add("$to")
+                return "已通知$to:$message"
+
             } else {
-                logger.debug("好友[$it]不存在，跳过。")
+                logger.debug("好友[$to]不存在，跳过。")
+                return null
             }
         }
-        if (sendUsers.size() > 0)
-            return "已通知$sendUsers:$message"
-        else
-            return null
+
+
     }
 }
